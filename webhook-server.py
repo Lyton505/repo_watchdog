@@ -6,12 +6,17 @@ from flask import Flask, jsonify
 import os
 from datetime import datetime
 import importlib
+from dotenv import load_dotenv
+from pathlib import Path
 
 app = Flask(__name__)
 
-REPO_OWNER = os.environ['GITHUB_REPO_OWNER']
-REPO_NAME = os.environ['GITHUB_REPO_NAME']
-GITHUB_TOKEN = os.environ['GITHUB_TOKEN']
+dotenv_path = Path('./.env')
+load_dotenv(dotenv_path=dotenv_path)
+
+REPO_OWNER = os.getenv('GITHUB_REPO_OWNER')
+REPO_NAME = os.getenv('GITHUB_REPO_NAME')
+GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
 CHECK_INTERVAL = 60
 
 last_checked_issue_number = 0
@@ -77,7 +82,7 @@ def poll_issues():
 # Flask route to check latest issue manually
 @app.route("/check_latest_issue", methods=["GET"])
 def check_issue():
-    latest_issue = get_latest_issue()
+    latest_issue = check_for_new_issues()
     if latest_issue:
         return jsonify({
             "message": "New issue detected!",
