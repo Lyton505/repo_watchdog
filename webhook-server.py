@@ -52,7 +52,7 @@ def check_for_new_issues():
             # if latest_issue["number"] > last_checked_issue_number:
             #     last_checked_issue_number = latest_issue["number"]
             #     return latest_issue
-    print("No new issues found.")
+            #    print("No new issues found.")
     return None
 
 
