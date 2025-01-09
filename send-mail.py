@@ -29,7 +29,7 @@ def send_email(to_email, subject, content):
     }
     response = requests.post(API_BASE_URL, json=data, headers=headers)
 
-    if response.status_code == 401:  # Access token expired
+    if response.status_code == 401 or response.status_code == 404:  # Access token expired
         print("Access token expired. Refreshing...")
         refresh_access_token()  # Refresh token
         headers["Authorization"] = f"Zoho-oauthtoken {ACCESS_TOKEN}"
