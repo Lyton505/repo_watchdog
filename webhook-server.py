@@ -4,6 +4,8 @@ import time
 import requests
 from flask import Flask, jsonify
 import os
+from datetime import datetime
+import importlib
 
 app = Flask(__name__)
 
@@ -13,6 +15,10 @@ GITHUB_TOKEN = os.environ['GITHUB_TOKEN']
 CHECK_INTERVAL = 60
 
 last_checked_issue_number = 0
+
+# Import the send_email function from send-mail.py
+send_mail = importlib.import_module('send-mail')
+send_email = send_mail.send_email
 
 def check_for_new_issues():
     global last_checked_issue_number
@@ -31,10 +37,10 @@ def check_for_new_issues():
         issues = response.json()
         if issues:
             for issue in issues:
-                # print(issue["pull_request"])
+                # print(f"Checking Issue: {issue}")
                 # print(issue["number"])
                 if ("pull_request" not in issue or issue["pull_request"] is None) and issue["number"] > last_checked_issue_number:
-                    print(f"New Issue Found: #{issue['number']} - {issue['title']}")
+                    # print(f"New Issue Found: #{issue['number']} - {issue['title']}")
                     last_checked_issue_number = issue["number"]
                     return issue
             # latest_issue = issues[0]  # Most recent issue
@@ -50,8 +56,22 @@ def poll_issues():
     while True:
         latest_issue = check_for_new_issues()
         if latest_issue:
-            print(f"New Issue Found: #{latest_issue['number']} - {latest_issue['title']}")
+            timestamp = latest_issue["created_at"]
+
+            # Parse the timestamp
+            date_object = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
+
+            print(f"New Issue Found: #{latest_issue['number']} - {latest_issue['title']} on {date_object.strftime("%B %d, %Y, %I:%M:%S %p (UTC)")}")
+
+            send_email(
+                to_email=os.environ['Z_EMAIL_TO_ADDRESS'],
+                subject=f"Oyster New Issue Created: #{latest_issue['number']}",
+                content=f"New Issue Found: #{latest_issue['number']} - {latest_issue['title']} on {date_object.strftime('%B %d, %Y, %I:%M:%S %p (UTC)')}",
+            )
+
+
         time.sleep(CHECK_INTERVAL)  # Wait before polling again
+
 
 
 # Flask route to check latest issue manually
